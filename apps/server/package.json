@@ -1,0 +1,27 @@
+{
+  "name": "@connect/server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@connect/db": "workspace:*",
+    "@connect/observability": "workspace:*",
+    "@connect/queue": "workspace:*",
+    "@connect/types": "workspace:*",
+    "@fastify/cors": "^11.0.0",
+    "@fastify/websocket": "^11.0.0",
+    "drizzle-orm": "^0.38.4",
+    "fastify": "^5.2.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0"
+  }
+}

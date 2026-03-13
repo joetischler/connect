@@ -1,0 +1,30 @@
+{
+  "name": "@connect/db",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist",
+    "migrate": "drizzle-kit migrate",
+    "generate": "drizzle-kit generate",
+    "seed": "tsx src/seed.ts"
+  },
+  "dependencies": {
+    "drizzle-orm": "^0.38.0",
+    "postgres": "^3.4.0"
+  },
+  "devDependencies": {
+    "drizzle-kit": "^0.30.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0",
+    "@connect/types": "workspace:*"
+  }
+}

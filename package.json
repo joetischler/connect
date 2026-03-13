@@ -1,0 +1,23 @@
+{
+  "name": "connect",
+  "private": true,
+  "packageManager": "pnpm@10.29.3",
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "typecheck": "turbo run typecheck",
+    "clean": "turbo run clean",
+    "db:migrate": "pnpm --filter @connect/db migrate",
+    "db:seed": "pnpm --filter @connect/db seed",
+    "docker:up": "docker compose -f docker/docker-compose.yml up -d",
+    "docker:down": "docker compose -f docker/docker-compose.yml down"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.0"
+  }
+}
