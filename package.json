@@ -18,6 +18,7 @@
     "docker:down": "docker compose -f docker/docker-compose.yml down"
   },
   "devDependencies": {
-    "@types/node": "^25.5.0"
+    "@types/node": "^25.5.0",
+    "vitest": "^4.1.0"
   }
 }

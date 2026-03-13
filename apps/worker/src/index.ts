@@ -1,5 +1,6 @@
 import { createLogger } from '@connect/observability';
 import { getConnection, Publisher, Subscriber, type MessageHandler } from '@connect/queue';
+import { parseHL7v2, isHL7v2 } from '@connect/hl7v2';
 import type { Envelope, EnvelopeStage } from '@connect/types';
 
 const logger = createLogger('worker');
@@ -15,13 +16,42 @@ const stageHandlers = new Map<EnvelopeStage, StageHandler>();
 // Register built-in stage handlers
 stageHandlers.set('ingested', async (envelope) => {
   logger.info({ envelopeId: envelope.id }, 'Processing ingested message');
-  // TODO: Invoke parser based on source type / content sniffing
-  return { ...envelope, stage: 'parsed' as const, updatedAt: new Date().toISOString() };
+
+  // Detect format and parse
+  const contentType = envelope.raw.contentType;
+  const rawContent = envelope.raw.sourceMetadata?.rawContent;
+
+  if (rawContent && (contentType === 'application/hl7-v2' || isHL7v2(rawContent))) {
+    try {
+      const result = parseHL7v2(rawContent);
+      return {
+        ...envelope,
+        stage: 'parsed' as const,
+        parsed: result.parsed,
+        classification: result.classification,
+        updatedAt: new Date().toISOString(),
+      };
+    } catch (error) {
+      logger.error({ envelopeId: envelope.id, error }, 'HL7v2 parse failed');
+    }
+  }
+
+  // Fallback: unknown format, pass through
+  return {
+    ...envelope,
+    stage: 'parsed' as const,
+    parsed: { format: 'unknown' as const, content: null, parserVersion: '0.1.0' },
+    updatedAt: new Date().toISOString(),
+  };
 });
 
 stageHandlers.set('parsed', async (envelope) => {
   logger.info({ envelopeId: envelope.id }, 'Classifying parsed message');
-  // TODO: Invoke classifier from @connect/intelligence
+  // If classification was already set during parsing (e.g., HL7v2 deterministic), skip
+  if (envelope.classification) {
+    return { ...envelope, stage: 'classified' as const, updatedAt: new Date().toISOString() };
+  }
+  // TODO: Invoke classifier from @connect/intelligence for non-deterministic formats
   return { ...envelope, stage: 'classified' as const, updatedAt: new Date().toISOString() };
 });
 

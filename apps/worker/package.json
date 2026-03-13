@@ -14,7 +14,9 @@
     "@connect/types": "workspace:*",
     "@connect/db": "workspace:*",
     "@connect/queue": "workspace:*",
-    "@connect/observability": "workspace:*"
+    "@connect/observability": "workspace:*",
+    "@connect/hl7v2": "workspace:*",
+    "@connect/pipeline": "workspace:*"
   },
   "devDependencies": {
     "tsx": "^4.19.0",
