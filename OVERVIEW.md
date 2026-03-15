@@ -2,10 +2,15 @@
 
 Comprehensive onboarding document for new team members. Read this top to bottom before diving into code.
 
+> **Important: Strategic Pivot (March 2025)**
+>
+> This repo started as "Connect" — a healthcare integration engine to replace Mirth Connect. The integration layer (HL7v2 parsing, NATS queue, pipeline engine) is still here and working, but the product vision has expanded significantly. **The real product is a healthcare agent scoping platform** — see [Strategic Direction](#0-strategic-direction) below. The integration layer is now Layer 1 (data ingestion), not the product itself.
+
 ---
 
 ## Table of Contents
 
+0. [Strategic Direction](#0-strategic-direction)
 1. [What Is Connect?](#1-what-is-connect)
 2. [Why Does This Exist?](#2-why-does-this-exist)
 3. [Architecture](#3-architecture)
@@ -26,6 +31,66 @@ Comprehensive onboarding document for new team members. Read this top to bottom 
 18. [Testing](#18-testing)
 19. [Environment Variables](#19-environment-variables)
 20. [Key Design Decisions](#20-key-design-decisions)
+
+---
+
+## 0. Strategic Direction
+
+### The Bigger Picture
+
+Connect's integration engine is a means to an end. The end is a **hierarchical scoping and agent deployment platform for healthcare**.
+
+The core insight: Healthcare organizations have a well-defined organizational hierarchy (enterprise, practice, location, department, provider), and **HL7v2 ADT/SIU feeds contain this hierarchy in real-time motion**. By ingesting these feeds, we automatically erect the organizational scaffolding that makes it safe to deploy agents (LLM assistants, RPA bots, rule engines, any automated process) with properly scoped data access.
+
+**Without proper scoping, agent deployment doesn't happen.** A scheduling bot at Practice A must not see Practice B's patients. A prior-auth agent at Location X needs that location's data, not the whole enterprise.
+
+### Product Layers (Top Down)
+
+```
+Layer 5: AGENT MARKETPLACE & SUGGESTIONS (v0.3+)
+Layer 4: AGENT RUNTIME — deploy, configure, monitor agents within scopes
+Layer 3: SCOPED ACCESS CONTROL — actors (users + agents) assigned to org nodes
+Layer 2: ORGANIZATIONAL HIERARCHY — FHIR-modeled, auto-populated from HL7v2
+Layer 1: DATA INGESTION — HL7v2 parsing (this repo's current strength)
+```
+
+Layer 1 is a commodity (we have a working parser, or Mirth can feed us). The differentiation is Layers 2-4.
+
+### What ADT/SIU Feeds Give Us
+
+A single ADT + SIU feed from an EMR contains:
+- **Organizations**: Facilities, departments (MSH.4, PV1.3 units, PV1.10 service)
+- **Locations**: Buildings, wings, rooms, beds (PV1.3 location hierarchy)
+- **Providers**: Attending, referring, admitting doctors + schedules (PV1.7/8/17, AIP)
+- **Patient flow**: Admits, transfers, discharges, appointments, no-shows
+
+Over time, this builds a complete, live picture of the organization. This is the CONTEXT that agents need.
+
+### Hierarchy Model (FHIR R4-Aligned)
+
+We mirror FHIR R4 organizational resources — NOT a de novo interpretation:
+- **Organization** (with `partOf`) — enterprise, practice, department, team
+- **Location** (with `partOf`, `managingOrganization`) — building, wing, ward, room, bed
+- **Practitioner** — the person (name, NPI, qualifications)
+- **PractitionerRole** — links practitioner to organization + location + specialty + schedule
+- **HealthcareService** — services at organizations/locations
+
+### Actor Model
+
+Users and agents are unified as **actors**:
+- An actor is either a human user or an automated process (any kind)
+- Actors are assigned **scopes** — an org node and everything below it in the hierarchy
+- Same agent template can be deployed at different scopes with different configs
+- All data queries are filtered by the actor's scope
+
+### What's Next
+
+Phase 1 (next): Hierarchy tables + ADT/SIU extraction + scope-filtered queries
+Phase 2: Actor/scope model + auth integration + agent templates
+Phase 3: Agent runtime + deployment + monitoring
+Phase 4: Pattern detection + agent suggestions
+
+See the full architectural plan in the project planning docs.
 
 ---
 
